@@ -35,7 +35,7 @@ export function generateReport(users, locationId) {
 
   doc.autoTable({
     startY: 48,
-    head: [['Rank', 'Name', 'Contact', 'Age', 'Score', 'Registered']],
+    head: [['Rank', 'Name', 'Contact', 'Age', 'Score', 'Registered', 'Scored']],
     body: sorted.map((u, i) => [
       i + 1,
       u.name,
@@ -43,6 +43,7 @@ export function generateReport(users, locationId) {
       u.age,
       u.score != null ? u.score : '—',
       u.timestamp ? format(new Date(u.timestamp), 'h:mm a') : '—',
+      u.scoreTimestamp ? format(new Date(u.scoreTimestamp), 'h:mm a') : '—',
     ]),
     styles: { fontSize: 10 },
     headStyles: { fillColor: [59, 130, 246] },

@@ -18,7 +18,9 @@ export default function PlayerForm() {
     setSuccessMsg('');
   };
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccessMsg('');
 
@@ -35,22 +37,21 @@ export default function PlayerForm() {
       return;
     }
 
-    const player = {
-      id: counter + 1,
+    const playerData = {
+      playerNumber: counter + 1,
       name: form.name.trim(),
       contact: form.contact.trim(),
       age: Number(form.age),
-      score: null,
-      timestamp: new Date().toISOString(),
-      scoreTimestamp: null,
     };
 
-    const result = addPlayer(player);
+    setSubmitting(true);
+    const result = await addPlayer(playerData);
+    setSubmitting(false);
 
     if (result.success) {
       setForm({ name: '', contact: '', age: '' });
       setErrors({});
-      setSuccessMsg(`Player #${player.id} "${player.name}" registered!`);
+      setSuccessMsg(`Player #${playerData.playerNumber} "${playerData.name}" registered!`);
       setTimeout(() => setSuccessMsg(''), 3000);
     } else {
       setErrors({ form: result.error });
@@ -130,10 +131,10 @@ export default function PlayerForm() {
 
       <button
         type="submit"
-        disabled={limitReached}
+        disabled={limitReached || submitting}
         className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        Register Player ({counter}/{MAX_PLAYERS})
+        {submitting ? 'Registering…' : `Register Player (${counter}/${MAX_PLAYERS})`}
       </button>
     </form>
   );

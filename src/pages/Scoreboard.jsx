@@ -9,7 +9,7 @@ import { FiUsers, FiArrowLeft } from 'react-icons/fi';
 
 export default function Scoreboard() {
   const { locationId } = useParams();
-  const { setLocation, users, counter } = useGame();
+  const { setLocation, users, counter, loading } = useGame();
   const cfg = LOCATION_CONFIG[locationId];
 
   useEffect(() => {
@@ -28,6 +28,17 @@ export default function Scoreboard() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Invalid Location</h1>
           <Link to="/" className="text-blue-400 hover:underline">← Back to Home</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="text-center text-gray-400">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          Loading {cfg.name}…
         </div>
       </div>
     );

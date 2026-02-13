@@ -9,7 +9,9 @@ export default function ScoreInput({ player }) {
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSaved(false);
@@ -20,9 +22,16 @@ export default function ScoreInput({ player }) {
       return;
     }
 
-    updateScore(player.id, Number(value));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    const saveResult = await updateScore(player.id, Number(value));
+    setSaving(false);
+
+    if (saveResult.success) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } else {
+      setError(saveResult.error);
+    }
   };
 
   return (
@@ -44,13 +53,16 @@ export default function ScoreInput({ player }) {
       />
       <button
         type="submit"
+        disabled={saving}
         className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
           saved
             ? 'bg-green-500 text-white'
+            : saving
+            ? 'bg-gray-400 text-white cursor-not-allowed'
             : 'bg-blue-600 text-white hover:bg-blue-700'
         }`}
       >
-        {saved ? <FiCheck className="inline" /> : 'Save'}
+        {saving ? '…' : saved ? <FiCheck className="inline" /> : 'Save'}
       </button>
       {error && <span className="text-red-500 text-xs">{error}</span>}
     </form>

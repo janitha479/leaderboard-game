@@ -1,58 +1,37 @@
 import { createContext, useContext, useReducer, useCallback } from 'react';
 import {
-  getUsers,
-  setUsers,
-  getCounter,
-  setCounter,
-  checkAndResetIfNewDay,
-  clearLocation,
-} from '../utils/storage';
+  fetchPlayers,
+  insertPlayer,
+  updatePlayerScore,
+  resetPlayers,
+} from '../utils/supabaseStorage';
 import { MAX_PLAYERS } from '../constants';
 
 // ── Context ──
 
 const GameContext = createContext(null);
 
-// ── Reducer ──
+// ── Reducer (synchronous local state only) ──
 
 function gameReducer(state, action) {
   switch (action.type) {
-    case 'SET_LOCATION': {
-      const { locationId } = action;
-      checkAndResetIfNewDay(locationId);
-      const users = getUsers(locationId);
-      const counter = getCounter(locationId);
-      return { ...state, locationId, users, counter };
+    case 'SET_LOADING':
+      return { ...state, loading: action.loading };
+
+    case 'SET_LOCATION_DATA': {
+      const { locationId, users } = action;
+      return { ...state, locationId, users, counter: users.length, loading: false };
     }
 
-    case 'ADD_PLAYER': {
-      const { player } = action;
-      const updated = [...state.users, player];
-      const newCount = state.counter + 1;
-      setUsers(state.locationId, updated);
-      setCounter(state.locationId, newCount);
-      return { ...state, users: updated, counter: newCount };
-    }
-
-    case 'UPDATE_SCORE': {
-      const { playerId, score } = action;
-      const updated = state.users.map((u) =>
-        u.id === playerId
-          ? { ...u, score, scoreTimestamp: new Date().toISOString() }
-          : u
-      );
-      setUsers(state.locationId, updated);
-      return { ...state, users: updated };
-    }
-
-    case 'RESET': {
-      clearLocation(state.locationId);
-      return { ...state, users: [], counter: 0 };
-    }
-
-    case 'SYNC_FROM_STORAGE': {
+    case 'SET_USERS': {
       return { ...state, users: action.users, counter: action.users.length };
     }
+
+    case 'SET_ERROR':
+      return { ...state, error: action.error, loading: false };
+
+    case 'CLEAR_ERROR':
+      return { ...state, error: null };
 
     default:
       return state;
@@ -65,41 +44,80 @@ const initialState = {
   locationId: null,
   users: [],
   counter: 0,
+  loading: false,
+  error: null,
 };
 
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
-  const setLocation = useCallback(
-    (locationId) => dispatch({ type: 'SET_LOCATION', locationId }),
-    []
-  );
+  // Load location data from Supabase
+  const setLocation = useCallback(async (locationId) => {
+    dispatch({ type: 'SET_LOADING', loading: true });
+    dispatch({ type: 'CLEAR_ERROR' });
+    try {
+      const users = await fetchPlayers(locationId);
+      dispatch({ type: 'SET_LOCATION_DATA', locationId, users });
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', error: err.message });
+    }
+  }, []);
 
+  // Add a player via Supabase
   const addPlayer = useCallback(
-    (player) => {
+    async (playerData) => {
       if (state.counter >= MAX_PLAYERS) {
         return { success: false, error: `Maximum ${MAX_PLAYERS} players reached for today.` };
       }
-      dispatch({ type: 'ADD_PLAYER', player });
-      return { success: true, error: null };
+      try {
+        await insertPlayer(state.locationId, playerData);
+        // Realtime subscription will update the list, but also refresh immediately
+        const users = await fetchPlayers(state.locationId);
+        dispatch({ type: 'SET_USERS', users });
+        return { success: true, error: null };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
     },
-    [state.counter]
+    [state.counter, state.locationId]
   );
 
+  // Update a player's score via Supabase
   const updateScore = useCallback(
-    (playerId, score) => dispatch({ type: 'UPDATE_SCORE', playerId, score }),
-    []
+    async (playerId, score) => {
+      try {
+        await updatePlayerScore(state.locationId, playerId, score);
+        const users = await fetchPlayers(state.locationId);
+        dispatch({ type: 'SET_USERS', users });
+        return { success: true, error: null };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+    [state.locationId]
   );
 
-  const resetLocation = useCallback(
-    () => dispatch({ type: 'RESET' }),
-    []
-  );
+  // Reset location (delete today's players)
+  const resetLocation = useCallback(async () => {
+    try {
+      await resetPlayers(state.locationId);
+      dispatch({ type: 'SET_USERS', users: [] });
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }, [state.locationId]);
 
-  const syncFromStorage = useCallback(
-    (users) => dispatch({ type: 'SYNC_FROM_STORAGE', users }),
-    []
-  );
+  // Called by realtime subscription to refresh data
+  const refreshFromSupabase = useCallback(async () => {
+    if (!state.locationId) return;
+    try {
+      const users = await fetchPlayers(state.locationId);
+      dispatch({ type: 'SET_USERS', users });
+    } catch {
+      // silent — will retry on next event
+    }
+  }, [state.locationId]);
 
   const value = {
     ...state,
@@ -107,7 +125,7 @@ export function GameProvider({ children }) {
     addPlayer,
     updateScore,
     resetLocation,
-    syncFromStorage,
+    refreshFromSupabase,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

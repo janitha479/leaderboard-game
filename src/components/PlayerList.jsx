@@ -34,7 +34,7 @@ export default function PlayerList() {
           <tbody className="divide-y divide-gray-100">
             {users.map((player) => (
               <tr key={player.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-sm text-gray-600 font-medium">{player.id}</td>
+                <td className="px-4 py-3 text-sm text-gray-600 font-medium">{player.playerNumber}</td>
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">{player.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{player.contact}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{player.age}</td>

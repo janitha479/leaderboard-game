@@ -11,7 +11,7 @@ import { FiArrowLeft, FiRefreshCw, FiUsers } from 'react-icons/fi';
 
 export default function AdminPanel() {
   const { locationId } = useParams();
-  const { setLocation, counter, users, resetLocation } = useGame();
+  const { setLocation, counter, users, resetLocation, loading } = useGame();
   const cfg = LOCATION_CONFIG[locationId];
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -36,8 +36,19 @@ export default function AdminPanel() {
     );
   }
 
-  const handleReset = () => {
-    resetLocation();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center text-gray-500">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          Loading {cfg.name}…
+        </div>
+      </div>
+    );
+  }
+
+  const handleReset = async () => {
+    await resetLocation();
     setShowConfirm(false);
   };
 
