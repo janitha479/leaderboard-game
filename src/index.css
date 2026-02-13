@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* ── Custom Theme ── */
+@theme {
+  --color-location-a: #3b82f6;
+  --color-location-b: #10b981;
+  --color-location-c: #8b5cf6;
+}
+
+/* ── Base Styles ── */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Pulse animation for live indicator ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── Scoreboard score highlight ── */
+@keyframes score-flash {
+  0% { background-color: rgba(59, 130, 246, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.score-updated {
+  animation: score-flash 1s ease-out;
+}
