@@ -45,6 +45,17 @@ function gameReducer(state, action) {
       return { ...state, users: updated };
     }
 
+    case 'UPDATE_PLAYER_LAYOUT': {
+      const { playerId, layout } = action;
+      const updated = state.users.map((u) =>
+        u.id === playerId
+          ? { ...u, layout: { ...(u.layout || {}), ...layout } }
+          : u
+      );
+      setUsers(state.locationId, updated);
+      return { ...state, users: updated };
+    }
+
     case 'RESET': {
       clearLocation(state.locationId);
       return { ...state, users: [], counter: 0 };
@@ -91,6 +102,11 @@ export function GameProvider({ children }) {
     []
   );
 
+  const updatePlayerLayout = useCallback(
+    (playerId, layout) => dispatch({ type: 'UPDATE_PLAYER_LAYOUT', playerId, layout }),
+    []
+  );
+
   const resetLocation = useCallback(
     () => dispatch({ type: 'RESET' }),
     []
@@ -106,6 +122,7 @@ export function GameProvider({ children }) {
     setLocation,
     addPlayer,
     updateScore,
+    updatePlayerLayout,
     resetLocation,
     syncFromStorage,
   };

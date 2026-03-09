@@ -41,6 +41,14 @@ export default function PlayerForm() {
       contact: form.contact.trim(),
       age: Number(form.age),
       score: null,
+      layout: {
+        xSpace: 32,
+        ySpace: 0,
+        nameX: 0,
+        nameY: 0,
+        scoreX: 0,
+        scoreY: 0,
+      },
       timestamp: new Date().toISOString(),
       scoreTimestamp: null,
     };
