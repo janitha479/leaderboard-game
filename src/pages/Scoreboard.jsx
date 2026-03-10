@@ -4,7 +4,7 @@ import { LOCATION_CONFIG } from '../constants';
 import { useGame } from '../context/GameContext';
 import { useStorageSync } from '../hooks/useStorageSync';
 import LeaderboardTable from '../components/LeaderboardTable';
-import scoreboardBg from './scoreboard.png';
+import scoreboardBg from './Scoreboard.png';
 
 export default function Scoreboard() {
   const { locationId } = useParams();
