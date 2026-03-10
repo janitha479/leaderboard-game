@@ -1,5 +1,4 @@
 import ScoreInput from './ScoreInput';
-import PlayerLayoutControls from './PlayerLayoutControls';
 import { format } from 'date-fns';
 import { useGame } from '../context/GameContext';
 
@@ -30,7 +29,6 @@ export default function PlayerList() {
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Age</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Score</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Layout</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -54,9 +52,6 @@ export default function PlayerList() {
                   ) : (
                     <ScoreInput player={player} />
                   )}
-                </td>
-                <td className="px-4 py-3">
-                  <PlayerLayoutControls player={player} />
                 </td>
               </tr>
             ))}
