@@ -81,7 +81,7 @@ export default function LeaderboardTable({ users }) {
         {ranked.map((player) => (
           <div
             key={player.id}
-            className="grid grid-cols-[1fr_auto] items-center rounded-xl px-5 py-3 bg-black/20 backdrop-blur-[1px]"
+            className="grid grid-cols-[1fr_auto] items-center px-5 py-3"
             style={{
               columnGap: `${asNumber(player.layout?.xSpace, 16)}px`,
               marginTop: `${asNumber(player.layout?.ySpace, 0)}px`,
@@ -89,7 +89,7 @@ export default function LeaderboardTable({ users }) {
             }}
           >
             <span
-              className="font-bold text-white text-4xl tracking-wide text-left select-none cursor-move pl-4"
+              className="font-bold text-white text-5xl tracking-wide text-left select-none cursor-move pl-4"
               onMouseDown={(event) => startDrag(event, player, 'name')}
               style={{
                 transform: `translate(${asNumber(player.layout?.nameX, 0)}px, ${asNumber(player.layout?.nameY, 0)}px)`,
