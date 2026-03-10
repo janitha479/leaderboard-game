@@ -9,7 +9,7 @@ export default function ScoreInput({ player }) {
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSaved(false);
@@ -20,7 +20,7 @@ export default function ScoreInput({ player }) {
       return;
     }
 
-    updateScore(player.id, Number(value));
+    await updateScore(player.id, Number(value));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

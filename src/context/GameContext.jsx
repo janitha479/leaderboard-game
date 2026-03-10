@@ -1,76 +1,61 @@
 import { createContext, useContext, useReducer, useCallback } from 'react';
 import {
   getUsers,
-  setUsers,
   getCounter,
-  setCounter,
-  checkAndResetIfNewDay,
+  addUser,
+  updateUserScore,
+  updateUserLayout,
   clearLocation,
 } from '../utils/storage';
 import { MAX_PLAYERS } from '../constants';
 
-// ── Context ──
-
 const GameContext = createContext(null);
-
-// ── Reducer ──
 
 function gameReducer(state, action) {
   switch (action.type) {
-    case 'SET_LOCATION': {
-      const { locationId } = action;
-      checkAndResetIfNewDay(locationId);
-      const users = getUsers(locationId);
-      const counter = getCounter(locationId);
-      return { ...state, locationId, users, counter };
-    }
+    case 'SET_LOCATION':
+      return {
+        ...state,
+        locationId: action.locationId,
+        users: action.users,
+        counter: action.counter,
+      };
 
-    case 'ADD_PLAYER': {
-      const { player } = action;
-      const updated = [...state.users, player];
-      const newCount = state.counter + 1;
-      setUsers(state.locationId, updated);
-      setCounter(state.locationId, newCount);
-      return { ...state, users: updated, counter: newCount };
-    }
+    case 'ADD_PLAYER':
+      return {
+        ...state,
+        users: [...state.users, action.player],
+        counter: state.counter + 1,
+      };
 
     case 'UPDATE_SCORE': {
-      const { playerId, score } = action;
       const updated = state.users.map((u) =>
-        u.id === playerId
-          ? { ...u, score, scoreTimestamp: new Date().toISOString() }
+        u.id === action.playerId
+          ? { ...u, score: action.score, scoreTimestamp: new Date().toISOString() }
           : u
       );
-      setUsers(state.locationId, updated);
       return { ...state, users: updated };
     }
 
     case 'UPDATE_PLAYER_LAYOUT': {
-      const { playerId, layout } = action;
       const updated = state.users.map((u) =>
-        u.id === playerId
-          ? { ...u, layout: { ...(u.layout || {}), ...layout } }
+        u.id === action.playerId
+          ? { ...u, layout: { ...(u.layout || {}), ...action.layout } }
           : u
       );
-      setUsers(state.locationId, updated);
       return { ...state, users: updated };
     }
 
-    case 'RESET': {
-      clearLocation(state.locationId);
+    case 'RESET':
       return { ...state, users: [], counter: 0 };
-    }
 
-    case 'SYNC_FROM_STORAGE': {
+    case 'SYNC_FROM_STORAGE':
       return { ...state, users: action.users, counter: action.users.length };
-    }
 
     default:
       return state;
   }
 }
-
-// ── Provider ──
 
 const initialState = {
   locationId: null,
@@ -81,36 +66,47 @@ const initialState = {
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
-  const setLocation = useCallback(
-    (locationId) => dispatch({ type: 'SET_LOCATION', locationId }),
-    []
-  );
+  const setLocation = useCallback(async (locationId) => {
+    const [users, counter] = await Promise.all([
+      getUsers(locationId),
+      getCounter(locationId),
+    ]);
+    dispatch({ type: 'SET_LOCATION', locationId, users, counter });
+  }, []);
 
   const addPlayer = useCallback(
-    (player) => {
+    async (player) => {
       if (state.counter >= MAX_PLAYERS) {
         return { success: false, error: `Maximum ${MAX_PLAYERS} players reached for today.` };
       }
+      const ok = await addUser(state.locationId, player);
+      if (!ok) return { success: false, error: 'Failed to save player. Please try again.' };
       dispatch({ type: 'ADD_PLAYER', player });
       return { success: true, error: null };
     },
-    [state.counter]
+    [state.counter, state.locationId]
   );
 
   const updateScore = useCallback(
-    (playerId, score) => dispatch({ type: 'UPDATE_SCORE', playerId, score }),
-    []
+    async (playerId, score) => {
+      await updateUserScore(state.locationId, playerId, score);
+      dispatch({ type: 'UPDATE_SCORE', playerId, score });
+    },
+    [state.locationId]
   );
 
   const updatePlayerLayout = useCallback(
-    (playerId, layout) => dispatch({ type: 'UPDATE_PLAYER_LAYOUT', playerId, layout }),
-    []
+    async (playerId, layout) => {
+      await updateUserLayout(state.locationId, playerId, layout);
+      dispatch({ type: 'UPDATE_PLAYER_LAYOUT', playerId, layout });
+    },
+    [state.locationId]
   );
 
-  const resetLocation = useCallback(
-    () => dispatch({ type: 'RESET' }),
-    []
-  );
+  const resetLocation = useCallback(async () => {
+    await clearLocation(state.locationId);
+    dispatch({ type: 'RESET' });
+  }, [state.locationId]);
 
   const syncFromStorage = useCallback(
     (users) => dispatch({ type: 'SYNC_FROM_STORAGE', users }),

@@ -36,8 +36,8 @@ export default function AdminPanel() {
     );
   }
 
-  const handleReset = () => {
-    resetLocation();
+  const handleReset = async () => {
+    await resetLocation();
     setShowConfirm(false);
   };
 

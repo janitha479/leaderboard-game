@@ -1,72 +1,117 @@
-import { STORAGE_KEYS } from '../constants';
+import { supabase } from './supabase';
 
 // ── Helpers ──
 
-export function getUsers(locationId) {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.users(locationId));
-    return raw ? JSON.parse(raw) : [];
-  } catch {
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function rowToPlayer(row) {
+  return {
+    id: row.player_number,
+    name: row.name,
+    contact: row.contact,
+    age: row.age,
+    score: row.score,
+    layout: row.layout || {},
+    timestamp: row.created_at,
+    scoreTimestamp: row.score_timestamp,
+  };
+}
+
+export async function getUsers(locationId) {
+  const { data, error } = await supabase
+    .from('players')
+    .select('*')
+    .eq('location_id', locationId)
+    .eq('game_date', today())
+    .order('player_number', { ascending: true });
+
+  if (error) {
+    console.error('getUsers error:', error);
     return [];
   }
+  return (data || []).map(rowToPlayer);
 }
 
-export function setUsers(locationId, users) {
-  localStorage.setItem(STORAGE_KEYS.users(locationId), JSON.stringify(users));
-}
+export async function getCounter(locationId) {
+  const { count, error } = await supabase
+    .from('players')
+    .select('*', { count: 'exact', head: true })
+    .eq('location_id', locationId)
+    .eq('game_date', today());
 
-export function getCounter(locationId) {
-  try {
-    return parseInt(localStorage.getItem(STORAGE_KEYS.counter(locationId)) || '0', 10);
-  } catch {
+  if (error) {
+    console.error('getCounter error:', error);
     return 0;
   }
+  return count || 0;
 }
 
-export function setCounter(locationId, count) {
-  localStorage.setItem(STORAGE_KEYS.counter(locationId), String(count));
-}
+export async function addUser(locationId, player) {
+  const { error } = await supabase.from('players').insert({
+    location_id: locationId,
+    player_number: player.id,
+    name: player.name,
+    contact: player.contact,
+    age: player.age,
+    score: player.score,
+    layout: player.layout,
+    score_timestamp: player.scoreTimestamp,
+    game_date: today(),
+  });
 
-export function getStoredDate(locationId) {
-  return localStorage.getItem(STORAGE_KEYS.date(locationId)) || '';
-}
-
-export function setStoredDate(locationId, dateStr) {
-  localStorage.setItem(STORAGE_KEYS.date(locationId), dateStr);
-}
-
-// ── Daily Reset ──
-
-export function checkAndResetIfNewDay(locationId) {
-  const today = new Date().toDateString();
-  const stored = getStoredDate(locationId);
-
-  if (stored !== today) {
-    setUsers(locationId, []);
-    setCounter(locationId, 0);
-    setStoredDate(locationId, today);
-    return true; // was reset
+  if (error) {
+    console.error('addUser error:', error);
+    return false;
   }
-  return false;
+  return true;
+}
+
+export async function updateUserScore(locationId, playerId, score) {
+  const { error } = await supabase
+    .from('players')
+    .update({ score, score_timestamp: new Date().toISOString() })
+    .eq('location_id', locationId)
+    .eq('player_number', playerId)
+    .eq('game_date', today());
+
+  if (error) console.error('updateUserScore error:', error);
+}
+
+export async function updateUserLayout(locationId, playerId, layout) {
+  const { data } = await supabase
+    .from('players')
+    .select('layout')
+    .eq('location_id', locationId)
+    .eq('player_number', playerId)
+    .eq('game_date', today())
+    .single();
+
+  const merged = { ...(data?.layout || {}), ...layout };
+
+  const { error } = await supabase
+    .from('players')
+    .update({ layout: merged })
+    .eq('location_id', locationId)
+    .eq('player_number', playerId)
+    .eq('game_date', today());
+
+  if (error) console.error('updateUserLayout error:', error);
 }
 
 // ── Full Reset ──
 
-export function clearLocation(locationId) {
-  setUsers(locationId, []);
-  setCounter(locationId, 0);
-  setStoredDate(locationId, new Date().toDateString());
+export async function clearLocation(locationId) {
+  const { error } = await supabase
+    .from('players')
+    .delete()
+    .eq('location_id', locationId)
+    .eq('game_date', today());
+
+  if (error) console.error('clearLocation error:', error);
 }
 
-// ── Feature check ──
-
-export function isLocalStorageAvailable() {
-  try {
-    const key = '__ls_test__';
-    localStorage.setItem(key, '1');
-    localStorage.removeItem(key);
-    return true;
-  } catch {
-    return false;
-  }
-}
+// Daily reset is automatic — queries filter by today's date,
+// so a new day returns an empty result set.

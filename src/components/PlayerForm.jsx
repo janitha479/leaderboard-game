@@ -18,7 +18,7 @@ export default function PlayerForm() {
     setSuccessMsg('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccessMsg('');
 
@@ -53,7 +53,7 @@ export default function PlayerForm() {
       scoreTimestamp: null,
     };
 
-    const result = addPlayer(player);
+    const result = await addPlayer(player);
 
     if (result.success) {
       setForm({ name: '', contact: '', age: '' });
