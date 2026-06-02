@@ -20,9 +20,9 @@ export const WINNER_POSITIONS = {
   // 1st Place Winner
   1: {
     nameX: 310,           // Horizontal position of name
-    nameY: 830,           // Vertical position of name
-    scoreX: 810,          // Horizontal position of score
-    scoreY: 830,          // Vertical position of score
+    nameY: 1020,           // Vertical position of name
+    scoreX: 880,          // Horizontal position of score
+    scoreY: 1020,          // Vertical position of score
     fontSize: '48px',     // Name font size
     scoreFontSize: '60px', // Score font size
     color: '#ffffff',     // Gold color for 1st place
@@ -32,9 +32,9 @@ export const WINNER_POSITIONS = {
   // 2nd Place Winner
   2: {
     nameX: 310,
-    nameY: 1050,
-    scoreX: 810,
-    scoreY: 1040,
+    nameY: 1140,
+    scoreX: 880,
+    scoreY: 1130,
     fontSize: '42px',
     scoreFontSize: '60px',
     color: '#ffffff',     // Silver color for 2nd place
@@ -44,9 +44,9 @@ export const WINNER_POSITIONS = {
   // 3rd Place Winner
   3: {
     nameX: 310,
-    nameY: 1270,
-    scoreX: 810,
-    scoreY: 1260,
+    nameY: 1250,
+    scoreX: 880,
+    scoreY: 1240,
     fontSize: '48px',
     scoreFontSize: '60px',
     color: '#ffffff',     // Bronze color for 3rd place
@@ -56,9 +56,9 @@ export const WINNER_POSITIONS = {
   // 4th Place
   4: {
     nameX: 310,
-    nameY: 1465,
-    scoreX: 810,
-    scoreY: 1455,
+    nameY: 1360,
+    scoreX: 880,
+    scoreY: 1350,
     fontSize: '48px',
     scoreFontSize: '60px',
     color: '#FFFFFF',     // White for 4th place
@@ -68,9 +68,9 @@ export const WINNER_POSITIONS = {
   // 5th Place
   5: {
     nameX: 310,
-    nameY: 1580,
-    scoreX: 810,
-    scoreY: 1580,
+    nameY: 1460,
+    scoreX: 880,
+    scoreY: 1450,
     fontSize: '48px',
     scoreFontSize: '60px',
     color: '#FFFFFF',     // White for 5th place
